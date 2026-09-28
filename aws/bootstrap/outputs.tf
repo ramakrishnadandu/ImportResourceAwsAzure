@@ -1,0 +1,11 @@
+output "state_bucket_name" {
+  value = aws_s3_bucket.tfstate.id
+}
+
+output "state_bucket_arn" {
+  value = aws_s3_bucket.tfstate.arn
+}
+
+output "state_bucket_region" {
+  value = aws_s3_bucket.tfstate.region
+}
