@@ -1,0 +1,69 @@
+name: Import and apply EC2 S3 IAM role
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: terraform-ec2-s3-iam
+  cancel-in-progress: false
+
+jobs:
+  import-and-apply:
+    name: Import existing resources and apply Terraform
+    runs-on: ubuntu-latest
+    environment: aws-production
+    defaults:
+      run:
+        working-directory: aws-iam-iac
+        shell: bash
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.10.5
+
+      - name: Initialize S3 backend
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=tfbackendrkd-us-east-1" \
+            -backend-config="key=terraform/iam-role/terraform.tfstate" \
+            -backend-config="region=us-east-1" \
+            -backend-config="encrypt=true" \
+            -backend-config="use_lockfile=true"
+
+      - name: Import existing IAM resources when absent from state
+        run: |
+          import_if_missing() {
+            local address="$1"
+            local import_id="$2"
+
+            if terraform state list | grep -Fxq "$address"; then
+              echo "$address is already tracked in the S3 state."
+            else
+              terraform import -input=false -var-file=terraform.tfvars.example "$address" "$import_id"
+            fi
+          }
+
+          import_if_missing 'aws_iam_role.ec2_s3' 'Ec2S3AccessRole'
+          import_if_missing 'aws_iam_role_policy.ec2_s3_access' 'Ec2S3AccessRole:Ec2S3AccessPolicy'
+          import_if_missing 'aws_iam_instance_profile.ec2_s3' 'Ec2S3AccessRole'
+
+      - name: Review Terraform plan
+        run: terraform plan -input=false -var-file=terraform.tfvars.example
+
+      - name: Apply Terraform changes
+        run: terraform apply -input=false -auto-approve -var-file=terraform.tfvars.example

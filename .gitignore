@@ -18,3 +18,9 @@ generated.tf
 # Local backend config with real values
 *.backend.hcl
 !example.backend.hcl
+
+# Local Terraform variable values
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
