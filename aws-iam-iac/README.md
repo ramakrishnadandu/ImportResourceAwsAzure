@@ -43,15 +43,15 @@ state key, region, encryption, and S3 lockfile settings during `terraform init`.
 
 Before running it:
 
-1. Configure GitHub OIDC in AWS. The AWS role trust policy must trust this
-   repository's GitHub Actions OIDC subject and allow `sts:AssumeRoleWithWebIdentity`.
-2. Add a repository variable named `AWS_ROLE_ARN` containing that role's ARN.
-   The role needs permission to manage the IAM resources and access the S3
-   backend state object and `.tflock` object.
-3. In GitHub repository settings, create an environment named
+1. In GitHub repository settings, create an environment named
    `aws-production`. Add required reviewers if you want an approval gate before
    the job can apply.
-4. Run **Actions → Import and apply EC2 S3 IAM role → Run workflow**.
+2. Open that environment and add secrets named `AWS_ACCESS_KEY_ID` and
+   `AWS_SECRET_ACCESS_KEY`. If using temporary AWS credentials, also add
+   `AWS_SESSION_TOKEN`. The AWS identity needs permission to manage the IAM
+   resources and access the S3 backend state object and `.tflock` object. Store
+   credentials as secrets, not variables.
+3. Run **Actions → Import and apply EC2 S3 IAM role → Run workflow**.
 
 The workflow is configured for manual dispatch only. Run Terraform apply from
 this workflow so the state and AWS changes are handled by GitHub Actions. If you
