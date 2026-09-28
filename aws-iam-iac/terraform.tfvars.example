@@ -1,0 +1,5 @@
+aws_region            = "us-east-1"
+bucket_arn            = "arn:aws:s3:::tfbackendrkd-us-east-1"
+role_name             = "Ec2S3AccessRole"
+policy_name           = "Ec2S3AccessPolicy"
+instance_profile_name = "Ec2S3AccessRole"
