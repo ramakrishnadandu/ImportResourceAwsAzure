@@ -3,7 +3,8 @@
 This configuration creates an IAM role trusted by EC2, an inline policy, and
 an instance profile. The policy allows EC2 inventory reads and S3
 list/read/write/delete access scoped to one existing bucket. It does not grant
-permissions to start, stop, or modify EC2 instances.
+permissions to start, stop, or modify EC2 instances. The role also has the AWS
+managed `AgentRegistryFullAccess` policy attached.
 
 ## Prerequisites
 
@@ -36,8 +37,9 @@ IAM is global; `aws_region` configures the provider's region.
 
 The repository workflow at `.github/workflows/import-ec2-s3-role.yml` is
 manually triggered from GitHub Actions. It initializes the S3 backend, imports
-the existing `Ec2S3AccessRole`, inline policy, and instance profile if they are
-not already in state, then runs `terraform plan` and `terraform apply`.
+the existing role, inline policy, managed policy attachment, and instance
+profile if they are not already in state, then runs `terraform plan` and
+`terraform apply`.
 The backend type is declared in `backend.tf`; the workflow supplies the bucket,
 state key, region, encryption, and S3 lockfile settings during `terraform init`.
 

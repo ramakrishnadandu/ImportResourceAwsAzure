@@ -1,3 +1,4 @@
+# EC2 is the only service allowed to assume this role.
 data "aws_iam_policy_document" "ec2_assume_role" {
   statement {
     effect  = "Allow"
@@ -15,6 +16,7 @@ resource "aws_iam_role" "ec2_s3" {
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
+# Custom inline policy: EC2 inventory reads and object access to the configured bucket.
 data "aws_iam_policy_document" "ec2_s3_access" {
   statement {
     sid       = "DescribeEc2Resources"
@@ -48,6 +50,13 @@ resource "aws_iam_role_policy" "ec2_s3_access" {
   policy = data.aws_iam_policy_document.ec2_s3_access.json
 }
 
+# Existing AWS-managed policy attached to this role in IAM.
+resource "aws_iam_role_policy_attachment" "agent_registry_full_access" {
+  role       = aws_iam_role.ec2_s3.name
+  policy_arn = "arn:aws:iam::aws:policy/AgentRegistryFullAccess"
+}
+
+# Makes the role available for attachment to EC2 instances.
 resource "aws_iam_instance_profile" "ec2_s3" {
   name = var.instance_profile_name
   role = aws_iam_role.ec2_s3.name
